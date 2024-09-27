@@ -1,0 +1,131 @@
+from pyautogui import *
+import pyautogui
+import time
+import keyboard
+import win32api, win32con
+
+#For this program to work you need to hover over the dot next to the number in dailyorders on the first link on tab resize 80% and for 15 tabs
+
+# Enable pyautogui failsafe
+pyautogui.FAILSAFE = True  # This allows you to move the mouse to the corner to stop the script
+
+# Function to click at a specific position
+def click(x, y):
+    win32api.SetCursorPos((x, y))
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+
+# Open a certain amount of tabs
+def openTabs(first_position, amountOfTabs,RApos,PRpos):
+    increment = 0
+    tabsCount = 0
+    try:
+        while not (keyboard.is_pressed('q')):  # The script will stop if you press 'q'
+
+            if tabsCount == amountOfTabs:
+                first = (amountOfTabs*2)
+                firstTab(tabsCount)
+                time.sleep(1.5)
+                i = 0
+                while i != (amountOfTabs):
+                    pricingRules(RApos,PRpos)
+                    i += 1
+                firstTab(first)
+                sleep(2)
+                checkSunspear(first)
+                break
+
+            keyboard.press('ctrl')  
+            yPosition = first_position[1] + increment
+            click(first_position[0], yPosition)  # Click to open the next tab
+            time.sleep(0.1)
+            keyboard.release('ctrl')
+
+            #This increment value is hardcoded for the tab size 80%
+            #Change for other tab sizes if needed but keep in mind over shooting or under shooting the links
+            increment += 44
+            tabsCount += 1
+            print(f"Opened tab #{tabsCount}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        print("Failsafe triggered, or 'q' pressed. Stopping the bot.")
+
+# Go back to the first tab
+def firstTab(tabsCount):
+    n = 0
+    while n != tabsCount:
+        keyboard.press_and_release("ctrl+shift+tab")  # Move back to the previous tab
+        time.sleep(0.18)
+        n += 1
+        print(f"Moved back to tab {n}")
+    return
+
+# Open pricing rules
+def pricingRules(RApos,PRpos):
+    win32api.SetCursorPos((RApos[0], RApos[1]))
+    time.sleep(1.2)
+    click(PRpos[0],PRpos[1])
+    time.sleep(0.5)
+    keyboard.press_and_release("ctrl+tab")
+
+# Run the bot
+def main():
+    print("What is the first link in the list? (you have 2 seconds to hover over it)")
+    sleep(2)
+    first_position = pyautogui.position()
+    print(f"First recorded position {first_position[0]}, {first_position[1]}")
+
+    #Uncomment this if you don't want hardcoded increment also pass linkdifference into opentabs
+    # print("What is the second link in the list? (you have 2 seconds to hover over it)")
+    # sleep(2)
+    # second_position = pyautogui.position()
+    # print(f"Second recorded position {second_position[0]}, {second_position[1]}")
+    
+    print("Where is Retail assistant?")
+    sleep(2)
+    RApos = pyautogui.position()
+    print(f"Retail assistant recorded position {RApos[0]}, {RApos[1]}")
+    
+    print("Where is pricing rules?")
+    sleep(2)
+    PRpos = pyautogui.position()
+    print(f"Pricing rules recorded position {PRpos[0]}, {PRpos[1]}")
+
+    #Uncomment this if you don't want hardcoded increment also pass linkdifference into opentabs
+    # link_difference = second_position[1] - first_position[1]
+    # print(f"link difference: {link_difference}")
+    amountOfTabs = int(input(print("How many tabs do you want to check?")))
+    #openTabs(first_position,link_difference, amountOfTabs,RApos,PRpos)
+    openTabs(first_position, amountOfTabs,RApos,PRpos)
+            
+def checkSunspear(first):
+
+    while first != 0:
+        # Get the pixel color at the specific position
+        r, g, b = pyautogui.pixel(1453, 451)
+        if r == 252 and g == 248 and b == 227:
+            print("Found the color! Moving to the next tab.")
+            sleep(0.5)  
+            keyboard.press_and_release("ctrl+shift+t")
+            first += 1
+            keyboard.press_and_release("ctrl+tab")
+              # Switch to the next tab without closing
+            first -= 1
+        #For this to work the screen has to be in fullscreen
+        r, g, b = pyautogui.pixel(173, 663)
+        if r == 49 and g == 112 and b == 143:
+            print("Found markodown! Moving to the next tab.")
+            sleep(0.5)  # Add a delay to simulate a smooth switch
+            keyboard.press_and_release("ctrl+shift+t")
+            first += 1
+            keyboard.press_and_release("ctrl+tab")
+              # Switch to the next tab without closing
+            first -= 1
+        else:
+            print("Color not found. Closing the current tab.")
+            sleep(0.5)  # Add a delay to simulate the closing
+            keyboard.press_and_release("ctrl+w")  # Close the current tab
+            first -= 1
+
+main()
